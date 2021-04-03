@@ -28,9 +28,6 @@ require('../../lib/util');
       var secret = forge.util.createBuffer("\x9b\xbe\x43\x6b\xa9\x40\xf0\x17\xb1\x76\x52\x84\x9a\x71\xdb\x35");
       var seed = forge.util.createBuffer("\xa0\xba\x9f\x93\x6c\xda\x31\x18\x27\xa6\xf7\x96\xff\xd5\x19\x8c");
       var bytes = forge.tls.prf_sha256(secret.bytes(), 'test label', seed.bytes(), 100);
-      console.log('secret:', secret.toHex());
-      console.log('seed:', seed.toHex());
-      console.log('bytes', bytes.toHex());
       var expect =
         'e3f229ba727be17b8d122620557cd453c2aab2' +
         '1d07c3d495329b52d4e61edb5a6b301791e90d3' +
