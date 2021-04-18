@@ -39,7 +39,7 @@ require('../../lib/util');
       ASSERT.equal(bytes.toHex(), expect);
     });
 
-    it('should establish a TLS connection and transfer data', function(done) {
+    function testConnection(done, requestVersion) {
       var end = {};
       var data = {};
 
@@ -49,6 +49,7 @@ require('../../lib/util');
       data.server.connection = {};
 
       end.client = forge.tls.createConnection({
+        maxVersion: requestVersion,
         server: false,
         caStore: [data.server.cert],
         sessionCache: {},
@@ -76,6 +77,7 @@ require('../../lib/util');
         },
         dataReady: function(c) {
           data.client.connection.data = c.data.getBytes();
+          console.log("client", c.session.version)
           c.close();
         },
         closed: function(c) {
@@ -96,8 +98,7 @@ require('../../lib/util');
         cipherSuites: [
           forge.tls.CipherSuites.TLS_RSA_WITH_AES_128_CBC_SHA,
           forge.tls.CipherSuites.TLS_RSA_WITH_AES_256_CBC_SHA],
-        connected: function(c) {
-        },
+        connected: function(c) {},
         verifyClient: true,
         verify: function(c, verified, depth, certs) {
           data.server.connection.commonName =
@@ -117,6 +118,7 @@ require('../../lib/util');
         },
         dataReady: function(c) {
           data.server.connection.data = c.data.getBytes();
+          data.server.connection.version = c.session.version;
           c.prepare('Hello Client');
           c.close();
         },
@@ -125,6 +127,8 @@ require('../../lib/util');
           ASSERT.equal(data.server.connection.commonName, 'client');
           ASSERT.equal(data.server.connection.certVerified, true);
           ASSERT.equal(data.server.connection.data, 'Hello Server');
+          ASSERT.equal(data.server.connection.version.major, requestVersion.major);
+          ASSERT.equal(data.server.connection.version.minor, requestVersion.minor);
         },
         error: function(c, error) {
           ASSERT.equal(error.message, undefined);
@@ -186,6 +190,10 @@ require('../../lib/util');
           privateKey: forge.pki.privateKeyToPem(keys.privateKey)
         };
       }
-    });
+    }
+
+    it('should establish a TLS 1.2 connection and transfer data', done => {testConnection(done, forge.tls.Versions.TLS_1_2)});
+    it('should establish a TLS 1.1 connection and transfer data', done => {testConnection(done, forge.tls.Versions.TLS_1_1)});
+    it('should establish a TLS 1.0 connection and transfer data', done => {testConnection(done, forge.tls.Versions.TLS_1_0)});
   });
 })();
